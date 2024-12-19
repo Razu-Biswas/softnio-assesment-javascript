@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Softnio-App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .selected {
+            border: 2px solid blue;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white rounded-md shadow-lg p-6 mt-12">
+        <!-- Product Detail -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <img id="main-thumbnail" src="assets/black-watch.png" alt="Smart Watch" class="rounded-lg shadow-md w-full">
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold">Classy Modern Smart Watch</h1>
+                <p class="text-gray-500 line-through">$99.00</p>
+                <p class="text-xl text-green-600 font-semibold">$79.00</p>
+                <p class="mt-4">An elegant smart watch with customizable bands and multiple features.</p>
+
+                <!-- Band Color Selection -->
+                <div class="mt-6">
+                    <label class="font-medium">Band Color:</label>
+                    <div class="flex space-x-4 mt-2">
+                        <button id="color-black" onclick="changeThumbnail('black')" class="w-10 h-10 bg-black rounded-full border-2"></button>
+                        <button id="color-purple" onclick="changeThumbnail('purple')" class="w-10 h-10 bg-purple-500 rounded-full border-2"></button>
+                        <button id="color-cyan" onclick="changeThumbnail('cyan')" class="w-10 h-10 bg-cyan-500 rounded-full border-2"></button>
+                    </div>
+                </div>
+
+                <!-- Size Selection -->
+                <div class="mt-6">
+                    <label class="font-medium">Size:</label>
+                    <div class="flex space-x-4 mt-2">
+                        <button id="size-S" onclick="selectSize('S', 69)" class="px-4 py-2 bg-gray-200 rounded-md">S - $69.00</button>
+                        <button id="size-M" onclick="selectSize('M', 79)" class="px-4 py-2 bg-gray-200 rounded-md"><span>M -</span> $79.00</button>
+                        <button id="size-L" onclick="selectSize('L', 89)" class="px-4 py-2 bg-gray-200 rounded-md">L - $89.00</button>
+                        <button id="size-XL" onclick="selectSize('XL', 99)" class="px-4 py-2 bg-gray-200 rounded-md">XL - $99.00</button>
+                    </div>
+                </div>
+
+                <!-- Add to Cart Button -->
+                <div class="mt-6 flex justify-between items-center">
+                    <div class="flex items-center space-x-2">
+                        <button onclick="decrementQuantity()" class="px-2 py-1 bg-gray-300 rounded-md">-</button>
+                        <span id="quantity" class="px-4">1</span>
+                        <button onclick="incrementQuantity()" class="px-2 py-1 bg-gray-300 rounded-md">+</button>
+                    </div>
+                    <button onclick="addToCart()" class="px-6 py-3 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-500">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Checkout Button -->
+    <button id="floating-checkout" onclick="openCartModal()" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-3 bg-yellow-500 text-white rounded-full hidden">Checkout (<span id="cart-count">0</span>)</button>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden">
+        <div class="bg-white rounded-md shadow-lg max-w-lg w-full p-6">
+            <h2 class="text-2xl font-bold mb-4">Your Cart</h2>
+            <ul id="cart-items" class="space-y-4"></ul>
+            <div class="flex justify-between mt-6 font-bold text-lg">
+                <span>Total Price:</span>
+                <span id="total-price">$0.00</span>
+            </div>
+            <div class="flex justify-between mt-6">
+                <button onclick="closeCartModal()" class="px-4 py-2 bg-gray-300 rounded-md">Continue Shopping</button>
+                <button class="px-6 py-2 bg-blue-600 text-white rounded-md">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        let currentColor = 'black';
+        let currentSize = 'M';
+        let currentPrice = 79.00;
+        let currentQuantity = 1;
+
+        function changeThumbnail(color) {
+            currentColor = color;
+            const thumbnail = document.getElementById('main-thumbnail');
+            const colors = {
+                black: 'assets/black-watch.png',
+                purple: 'assets/purple-watch.png',
+                cyan: 'assets/cyan-watch.png'
+            };
+            thumbnail.src = colors[color];
+
+            // Highlight selected color
+            document.querySelectorAll('[id^="color-"]').forEach(button => button.classList.remove('selected'));
+            document.getElementById(`color-${color}`).classList.add('selected');
+        }
+
+        function selectSize(size, price) {
+            currentSize = size;
+            currentPrice = price;
+
+            // Highlight selected size
+            document.querySelectorAll('[id^="size-"]').forEach(button => button.classList.remove('selected'));
+            document.getElementById(`size-${size}`).classList.add('selected');
+        }
+
+        function incrementQuantity() {
+            currentQuantity++;
+            document.getElementById('quantity').innerText = currentQuantity;
+        }
+
+        function decrementQuantity() {
+            if (currentQuantity > 1) {
+                currentQuantity--;
+                document.getElementById('quantity').innerText = currentQuantity;
+            }
+        }
+
+        function addToCart() {
+            const item = {
+                name: 'Classy Modern Smart Watch',
+                color: currentColor,
+                size: currentSize,
+                price: currentPrice,
+                quantity: currentQuantity
+            };
+            cart.push(item);
+            updateFloatingCheckout();
+        }
+
+        function updateFloatingCheckout() {
+            const checkoutButton = document.getElementById('floating-checkout');
+            const cartCount = document.getElementById('cart-count');
+            cartCount.innerText = cart.length;
+            checkoutButton.classList.remove('hidden');
+        }
+
+        function openCartModal() {
+            const modal = document.getElementById('cart-modal');
+            const cartItems = document.getElementById('cart-items');
+            cartItems.innerHTML = '';
+
+            let totalPrice = 0;
+
+            cart.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.classList.add('flex', 'justify-between', 'items-center');
+                li.innerHTML = `
+                    <div>
+                        <p>${item.name}</p>
+                        <p class="text-gray-500">Color: ${item.color}, Size: ${item.size}, Quantity: ${item.quantity}</p>
+                    </div>
+                    <p class="text-gray-700">$${(item.price * item.quantity).toFixed(2)}</p>
+                `;
+                cartItems.appendChild(li);
+
+                totalPrice += item.price * item.quantity;
+            });
+
+            document.getElementById('total-price').innerText = `$${totalPrice.toFixed(2)}`;
+            modal.classList.remove('hidden');
+        }
+
+        function closeCartModal() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
